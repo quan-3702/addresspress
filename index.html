@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AddressPress – Envelope &amp; Label Printer</title>
+  <meta name="description" content="Print addresses on envelopes and label sheets from your own address book. Simple, private and offline, with no print limits.">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <style id="pageRule"></style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="icon-192.png" alt="" width="30" height="30"><span>AddressPress</span></div>
+    <span class="tree-title"></span>
+    <div class="top-btns">
+      <button id="printBtn" class="tb">🖨 Print</button>
+      <button id="testBtn" class="tb">Print a test page</button>
+      <button id="moreBtn" class="tb">☰ More</button>
+      <button id="proBtn" class="pro-btn" hidden>★ Get Pro</button>
+    </div>
+    <div id="menu" class="menu" hidden>
+      <button id="importBtn">Import addresses from a CSV file… <span class="badge pro-only">PRO</span></button>
+      <button id="exportBtn">Save all addresses as a CSV file</button>
+      <button id="sampleBtn">Add some sample addresses</button>
+      <button id="clearBtn" class="danger">Delete all addresses…</button>
+      <a href="help.html" target="_blank" rel="noopener">❓ How to use AddressPress</a>
+      <a href="mailto:thequan03072002@gmail.com?subject=AddressPress%20feedback">✉ Feedback &amp; support</a>
+      <a href="https://apps.microsoft.com/detail/9MWSF3JMP1GJ" target="_blank" rel="noopener">More apps: PrintCal photo calendar maker</a>
+      <a href="https://apps.microsoft.com/detail/9NRR32J91340" target="_blank" rel="noopener">More apps: Kinleaf family tree maker</a>
+    </div>
+    <input id="fileIn" type="file" accept=".csv,text/csv,text/plain" hidden>
+  </header>
+
+  <main class="layout">
+    <aside class="left">
+      <h2>1 · What to print</h2>
+      <div class="seg3" id="modes" style="grid-template-columns:1fr 1fr">
+        <button data-m="env">Envelopes</button>
+        <button data-m="lab">Label sheets</button>
+      </div>
+      <label class="field" id="envF">Envelope size<select id="env"></select></label>
+      <div class="two" id="envCustomF" hidden>
+        <label class="field">Width (mm)<input id="ew" type="text" inputmode="decimal" maxlength="5"></label>
+        <label class="field">Height (mm)<input id="eh" type="text" inputmode="decimal" maxlength="5"></label>
+      </div>
+      <label class="field" id="labF">Label sheet<select id="lab"></select></label>
+      <div class="two" id="labOpts">
+        <label class="field">Start at label no.<input id="start" type="text" inputmode="numeric" maxlength="2"></label>
+        <label class="field">Labels show<select id="labWhat"><option value="to">Each address once</option><option value="ret">Only my return address</option></select></label>
+      </div>
+      <div class="two">
+        <label class="field">Lettering<select id="font"><option value="sans">Modern</option><option value="serif">Classic</option><option value="script">Handwriting</option></select></label>
+        <label class="field">Letter size<select id="size"><option value="0.85">Small</option><option value="1">Normal</option><option value="1.2">Large</option><option value="1.4">Extra large</option></select></label>
+      </div>
+      <label class="check" id="retChkF"><input id="showRet" type="checkbox"> Print my return address on envelopes</label>
+
+      <h2>2 · My return address</h2>
+      <textarea id="ret" placeholder="Your name&#10;Street and number&#10;City, State ZIP" spellcheck="false"></textarea>
+
+      <h2>3 · Addresses <span id="count" style="text-transform:none;letter-spacing:0"></span></h2>
+      <div class="row-btns" style="margin-top:0">
+        <button id="addBtn" class="primary">+ Add an address</button>
+        <button id="allBtn" class="ghost">Tick all</button>
+        <button id="noneBtn" class="ghost">Untick all</button>
+      </div>
+      <ul id="contacts" class="contacts"></ul>
+      <p id="hint" class="hint"></p>
+
+      <h2>If the print is off-centre</h2>
+      <div class="two">
+        <label class="field">Move right (mm)<input id="dx" type="text" inputmode="decimal" maxlength="5"></label>
+        <label class="field">Move down (mm)<input id="dy" type="text" inputmode="decimal" maxlength="5"></label>
+      </div>
+      <p class="hint">Use minus numbers to move left or up. Try on plain paper first.</p>
+    </aside>
+
+    <section class="stage">
+      <div id="pager" class="pager"></div>
+      <div class="preview">
+        <button id="prev" class="nav" title="Previous page">‹</button>
+        <div id="page" style="height:100%;display:flex;align-items:center;justify-content:center;min-width:0;flex:1"></div>
+        <button id="next" class="nav" title="Next page">›</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="cDialog" class="dlg">
+    <h2 id="cTitle">Add an address</h2>
+    <label class="field">Name<input id="cName" type="text" maxlength="80" placeholder="e.g. Mr and Mrs Robert Miller"></label>
+    <label class="field">Address<textarea id="cAddr" maxlength="400" placeholder="Street and number&#10;City, State ZIP&#10;Country (if abroad)" spellcheck="false"></textarea></label>
+    <div class="row-btns">
+      <button id="cSave" class="primary">Save</button>
+      <button id="cNext" class="ghost">Save and add another</button>
+      <button id="cCancel" class="ghost">Cancel</button>
+    </div>
+  </dialog>
+
+  <dialog id="proDialog" class="dlg">
+    <h2>AddressPress Pro</h2>
+    <p class="muted">One-time purchase. Yours forever on this Microsoft account. Printing is never limited – print as often as you like, also in the free version.</p>
+    <ul class="pro-list">
+      <li><strong>Unlimited addresses</strong> in your address book <span class="muted">(Free: 10)</span></li>
+      <li><strong>Import from a CSV file</strong> – bring your list from Excel, Google Contacts or Outlook</li>
+      <li><strong>Your own envelope size</strong> in millimetres</li>
+    </ul>
+    <p id="proMsg" class="pro-msg" hidden></p>
+    <div class="row-btns">
+      <button id="buyBtn" class="primary">Unlock Pro</button>
+      <button id="restoreBtn" class="ghost">Restore purchase</button>
+      <button id="closePro" class="ghost">Not now</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <div id="printArea"></div>
+  <script src="app.js"></script>
+</body>
+</html>
