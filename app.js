@@ -95,6 +95,9 @@ const LABS = [
   { id: 'us30', name: 'US Letter – 30 labels, 1 × 2⅝ in (Avery 5160 size)', pw: 215.9, ph: 279.4, cols: 3, rows: 10, w: 66.68, h: 25.4, left: 4.76, top: 12.7, px: 69.85, py: 25.4 },
   { id: 'us20', name: 'US Letter – 20 labels, 1 × 4 in (Avery 5161 size)', pw: 215.9, ph: 279.4, cols: 2, rows: 10, w: 101.6, h: 25.4, left: 3.97, top: 12.7, px: 106.36, py: 25.4 },
   { id: 'us10', name: 'US Letter – 10 labels, 2 × 4 in (Avery 5163 size)', pw: 215.9, ph: 279.4, cols: 2, rows: 5, w: 101.6, h: 50.8, left: 3.97, top: 12.7, px: 106.36, py: 50.8 },
+  { id: 'us14', name: 'US Letter – 14 labels, 1⅓ × 4 in (Avery 5162 size)', pw: 215.9, ph: 279.4, cols: 2, rows: 7, w: 101.6, h: 33.87, left: 4.06, top: 21.08, px: 106.43, py: 33.87 },
+  { id: 'us6', name: 'US Letter – 6 labels, 3⅓ × 4 in (Avery 5164 size)', pw: 215.9, ph: 279.4, cols: 2, rows: 3, w: 101.6, h: 84.67, left: 4.06, top: 12.7, px: 106.43, py: 84.67 },
+  { id: 'us80', name: 'US Letter – 80 return labels, ½ × 1¾ in (Avery 5167 size)', pw: 215.9, ph: 279.4, cols: 4, rows: 20, w: 44.45, h: 12.7, left: 7.62, top: 12.7, px: 52.07, py: 12.7 },
   { id: 'a421', name: 'A4 – 21 labels, 63.5 × 38.1 mm (L7160 size)', pw: 210, ph: 297, cols: 3, rows: 7, w: 63.5, h: 38.1, left: 7.21, top: 15.15, px: 66.04, py: 38.1 },
   { id: 'a414', name: 'A4 – 14 labels, 99.1 × 38.1 mm (L7163 size)', pw: 210, ph: 297, cols: 2, rows: 7, w: 99.1, h: 38.1, left: 4.65, top: 15.15, px: 101.6, py: 38.1 },
   { id: 'a424', name: 'A4 – 24 labels, 70 × 37 mm', pw: 210, ph: 297, cols: 3, rows: 8, w: 70, h: 37, left: 0, top: 0.5, px: 70, py: 37 },
@@ -290,7 +293,35 @@ $('moreBtn').onclick = (e) => { e.stopPropagation(); $('menu').hidden = !$('menu
 document.addEventListener('click', () => { $('menu').hidden = true; });
 $('importBtn').onclick = () => {
   if (needsPro('Importing a CSV file is part of Pro. You can always add addresses by hand.')) return;
-  const i = $('fileIn'); i.value = ''; i.onchange = async () => { if (!i.files[0]) return; const list = csvToContacts(await i.files[0].text()); if (!list.length) { toast('No addresses were found in this file.'); return; } st.contacts = st.contacts.concat(list); change(); toast(`${list.length} addresses added.`); }; i.click();
+  DataIn.importList({
+    title: 'Import addresses from Excel or CSV',
+    fields: [
+      { key: 'name', label: 'Name', required: true, guess: /^(full ?)?name|recipient|tên|contact/i },
+      { key: 'company', label: 'Company', guess: /company|organi[sz]ation|business|firm/i },
+      { key: 'a1', label: 'Street / address line 1', guess: /address ?(line)? ?1|street|^address|địa chỉ/i },
+      { key: 'a2', label: 'Address line 2', guess: /address ?(line)? ?2|apt|suite|unit|flat/i },
+      { key: 'city', label: 'City', guess: /city|town|suburb|thành phố/i },
+      { key: 'state', label: 'State / county', guess: /state|province|region|county/i },
+      { key: 'zip', label: 'ZIP / postcode', guess: /zip|postal|post ?code/i },
+      { key: 'country', label: 'Country', guess: /country|nation|quốc gia/i },
+    ],
+    onDone: (rows) => {
+      const have = new Set(st.contacts.map((c) => (c.name + '|' + c.addr).toLowerCase()));
+      let dup = 0;
+      const list = [];
+      rows.forEach((o) => {
+        const cityLine = [[o.city, o.state].filter(Boolean).join(', '), o.zip].filter(Boolean).join(' ');
+        const addr = [o.company, o.a1, o.a2, cityLine, o.country].filter(Boolean).join('\n');
+        const key = (o.name + '|' + addr).toLowerCase();
+        if (have.has(key)) { dup++; return; }
+        have.add(key); list.push({ id: uid(), name: o.name, addr, on: true });
+      });
+      if (!list.length) { toast(dup ? 'All of these addresses are already in your list.' : 'No addresses were found.'); return; }
+      if (!canAdd(list.length)) return;
+      st.contacts = st.contacts.concat(list); change();
+      toast(`${list.length} addresses added${dup ? ` – ${dup} duplicate${dup > 1 ? 's' : ''} skipped` : ''}.`);
+    },
+  });
 };
 $('exportBtn').onclick = exportCsv;
 $('sampleBtn').onclick = () => { if (!canAdd(SAMPLE.length)) return; SAMPLE.forEach(([name, addr]) => st.contacts.push({ id: uid(), name, addr, on: true })); if (!st.ret) st.ret = 'John and Mary Carter\n31 Willow Way\nMadison, WI 53703'; change(); };
