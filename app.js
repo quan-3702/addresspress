@@ -6,6 +6,7 @@ const PRO_SKU = 'addresspress_pro';
 const PRO_IDS = [PRO_SKU];
 let STORE_URL = 'https://apps.microsoft.com/detail/9PJZFJ139JC2';
 let proAvailable = false; // Pro limits apply only when the Store actually sells the add-on
+try { if ('getDigitalGoodsService' in window && localStorage.getItem('addresspress-proavail') === '1') proAvailable = true; } catch (_) {} // keep Pro limits when offline
 let proSku = PRO_SKU;
 let isPro = false;
 try { isPro = localStorage.getItem('addresspress-pro') === '1'; } catch (_) {}
@@ -25,17 +26,26 @@ function setPro(v) {
   document.body.classList.toggle('unlocked', unlocked());
   if (typeof renderAll === 'function') renderAll();
 }
+async function checkProAfterBuy() {
+  for (let i = 0; i < 6; i++) {
+    if (await checkPro()) return true;
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  proMessage('Thank you! If Pro is not unlocked within a minute, click “Restore purchase”.');
+  return false;
+}
 async function checkPro() {
   const svc = await billing();
   if (!svc) return false;
   try {
     const details = await svc.getDetails(PRO_IDS).catch(() => []);
-    proAvailable = details.length > 0;
+    if (details.length) { proAvailable = true; try { localStorage.setItem('addresspress-proavail', '1'); } catch (_) {} }
     if (details[0]) { proSku = details[0].itemId; if (!PRO_IDS.includes(proSku)) PRO_IDS.push(proSku); }
     const list = await svc.listPurchases();
     const owned = list.some((p) => PRO_IDS.includes(p.itemId));
-    setPro(owned);
-    return owned;
+    if (owned || details.length) { setPro(owned); return owned; }
+    setPro(isPro); // Store did not answer (offline): keep what we knew
+    return isPro;
   } catch (_) { return isPro; }
 }
 function proMessage(text) { const m = $('proMsg'); m.hidden = !text; m.textContent = text || ''; }
@@ -70,7 +80,7 @@ async function buyPro() {
     proMessage('Purchase could not be completed: ' + (e.message || e));
     return;
   }
-  if (await checkPro()) { proMessage('Thank you! Pro is unlocked. ★'); setTimeout(() => $('proDialog').close(), 1500); }
+  if (await checkProAfterBuy()) { proMessage('Thank you! Pro is unlocked. ★'); setTimeout(() => $('proDialog').close(), 1500); }
 }
 function needsPro(reason) {
   if (unlocked()) return false;
@@ -109,7 +119,9 @@ const num = (v, lo, hi, d) => { const n = parseFloat(String(v).replace(',', '.')
 let st = { mode: 'env', env: 'n10', ew: 190, eh: 130, lab: 'us30', start: 1, labWhat: 'to', font: 'sans', size: 1, showRet: true, ret: '', dx: 0, dy: 0, contacts: [] };
 try { Object.assign(st, JSON.parse(localStorage.getItem('addresspress') || '{}')); } catch (_) {}
 let saveTimer;
-function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem('addresspress', JSON.stringify(st)); } catch (_) { toast('Could not save – storage is full'); } }, 250); }
+function saveNow() { clearTimeout(saveTimer); try { localStorage.setItem('addresspress', JSON.stringify(st)); } catch (_) { toast('Could not save – storage is full'); } }
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 250); }
+window.addEventListener('pagehide', saveNow); // closing the window right after a change must not lose it
 const uid = () => Math.random().toString(36).slice(2, 10);
 const linesOf = (c) => [c.name].concat(String(c.addr || '').split(/\r?\n/)).map((s) => s.trim()).filter(Boolean);
 const retLines = () => st.ret.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
@@ -296,7 +308,8 @@ $('importBtn').onclick = () => {
   DataIn.importList({
     title: 'Import addresses from Excel or CSV',
     fields: [
-      { key: 'name', label: 'Name', required: true, guess: /^(full ?)?name|recipient|tên|contact/i },
+      { key: 'name', label: 'Name', required: true, guess: /^(full ?)?name|recipient|tên|contact|^first ?name|given ?name/i },
+      { key: 'last', label: 'Last name (if in its own column)', guess: /^last ?name|surname|family ?name/i },
       { key: 'company', label: 'Company', guess: /company|organi[sz]ation|business|firm/i },
       { key: 'a1', label: 'Street / address line 1', guess: /address ?(line)? ?1|street|^address|địa chỉ/i },
       { key: 'a2', label: 'Address line 2', guess: /address ?(line)? ?2|apt|suite|unit|flat/i },
@@ -312,9 +325,10 @@ $('importBtn').onclick = () => {
       rows.forEach((o) => {
         const cityLine = [[o.city, o.state].filter(Boolean).join(', '), o.zip].filter(Boolean).join(' ');
         const addr = [o.company, o.a1, o.a2, cityLine, o.country].filter(Boolean).join('\n');
-        const key = (o.name + '|' + addr).toLowerCase();
+        const name = o.last && !o.name.toLowerCase().includes(o.last.toLowerCase()) ? `${o.name} ${o.last}` : o.name;
+        const key = (name + '|' + addr).toLowerCase();
         if (have.has(key)) { dup++; return; }
-        have.add(key); list.push({ id: uid(), name: o.name, addr, on: true });
+        have.add(key); list.push({ id: uid(), name, addr, on: true });
       });
       if (!list.length) { toast(dup ? 'All of these addresses are already in your list.' : 'No addresses were found.'); return; }
       if (!canAdd(list.length)) return;
