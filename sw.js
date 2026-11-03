@@ -1,4 +1,4 @@
-const CACHE = 'addresspress-v3';
+const CACHE = 'addresspress-v4';
 const ASSETS = ['./', 'index.html', 'help.html', 'privacy.html', 'style.css', 'app.js', 'datain.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png'];
 
 self.addEventListener('install', (e) => {
