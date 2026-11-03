@@ -136,3 +136,5 @@ textarea { min-height: 70px; resize: vertical; }
 .preview svg { height: auto; max-height: 100%; }
 #ret { min-height: 84px; }
 #cAddr { min-height: 110px; }
+.fb-note { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 8px 0 0; overflow-wrap: anywhere; }
+.fb-note a { color: var(--accent); }

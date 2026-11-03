@@ -9,7 +9,16 @@ let proAvailable = false; // Pro limits apply only when the Store actually sells
 proAvailable = true; // owner's rule: Pro is never free – free limits apply everywhere (website, Store, offline) until Pro is bought
 let proSku = PRO_SKU;
 let isPro = false;
-try { isPro = localStorage.getItem('addresspress-pro') === '1'; } catch (_) {}
+try { // the saved Pro flag is trusted only in the Store app, and only for 30 days after the Store last confirmed it
+  if ('getDigitalGoodsService' in window && localStorage.getItem('addresspress-pro') === '1') {
+    const ok = localStorage.getItem('addresspress-pro-ok'), t = Number(ok), now = Date.now();
+    if (ok === null) { localStorage.setItem('addresspress-pro-ok', String(now)); isPro = true; } // saved by an older version: counts as confirmed now, once
+    else isPro = t > 0 && t <= now && now - t < 30 * 864e5;
+  }
+} catch (_) {}
+function savePro(v) { // only called when the Store answered
+  try { if (v) { localStorage.setItem('addresspress-pro', '1'); localStorage.setItem('addresspress-pro-ok', String(Date.now())); } else { localStorage.removeItem('addresspress-pro'); localStorage.removeItem('addresspress-pro-ok'); } } catch (_) {}
+}
 const unlocked = () => isPro || !proAvailable;
 
 async function billing() {
@@ -18,7 +27,6 @@ async function billing() {
 }
 function setPro(v) {
   isPro = v;
-  try { localStorage.setItem('addresspress-pro', v ? '1' : '0'); } catch (_) {}
   const b = $('proBtn');
   b.textContent = v ? '★ Pro' : '★ Get Pro';
   b.classList.toggle('is-pro', v);
@@ -42,7 +50,7 @@ async function checkPro() {
     if (details[0]) { proSku = details[0].itemId; if (!PRO_IDS.includes(proSku)) PRO_IDS.push(proSku); }
     const list = await svc.listPurchases();
     const owned = list.some((p) => PRO_IDS.includes(p.itemId));
-    if (owned || details.length) { setPro(owned); return owned; }
+    if (owned || details.length) { savePro(owned); setPro(owned); return owned; }
     setPro(isPro); // Store did not answer (offline): keep what we knew
     return isPro;
   } catch (_) { return isPro; }
@@ -221,6 +229,7 @@ function doPrint() {
   if (st.mode === 'lab' && st.labWhat === 'to' && !chosen().length) { toast('Tick at least one address first.'); return; }
   if (st.mode === 'lab' && st.labWhat === 'ret' && !retLines().length) { toast('Type your return address first.'); return; }
   if (st.mode === 'env' && envSize().custom && needsPro('Your own envelope size is part of Pro. All standard sizes are free.')) return;
+  if (!(st.mode === 'lab' && st.labWhat === 'ret') && st.contacts.length > FREE_CONTACTS && needsPro(`Your address book holds ${st.contacts.length} addresses. The free version keeps up to ${FREE_CONTACTS} – unlock Pro to print them all, or save them as a CSV file and delete some.`)) return;
   printPages(build(false));
 }
 function testPage() { printPages(labelPages([], false, true)); toast('Hold the test page behind a label sheet against a window to check that the boxes match.'); }
