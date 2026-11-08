@@ -52,8 +52,12 @@
         <label class="field">Labels show<select id="labWhat"><option value="to">Each address once</option><option value="ret">Only my return address</option></select></label>
       </div>
       <div class="two">
-        <label class="field">Lettering<select id="font"><option value="sans">Modern</option><option value="serif">Classic</option><option value="script">Handwriting</option></select></label>
+        <label class="field">Lettering<select id="font"><option value="sans">Modern</option><option value="serif">Classic</option><option value="script">Handwriting</option><option value="elegant">Elegant ★</option><option value="pen">Pen ★</option></select></label>
         <label class="field">Letter size<select id="size"><option value="0.85">Small</option><option value="1">Normal</option><option value="1.2">Large</option><option value="1.4">Extra large</option></select></label>
+      </div>
+      <div class="two">
+        <label class="field">Decoration <span class="badge pro-only">PRO</span><select id="design"></select></label>
+        <label class="field">Ink colour <span class="badge pro-only">PRO</span><select id="ink"></select></label>
       </div>
       <label class="check" id="retChkF"><input id="showRet" type="checkbox"> Print my return address on envelopes</label>
 
@@ -65,6 +69,17 @@
         <button id="addBtn" class="primary">+ Add an address</button>
         <button id="allBtn" class="ghost">Tick all</button>
         <button id="noneBtn" class="ghost">Untick all</button>
+      </div>
+      <div class="grp-bar"><select id="grpFilter" aria-label="Show a group"></select><button id="grpTick" class="ghost small" hidden></button></div>
+      <label class="check"><input id="cardsOn" type="checkbox"> 🎄 Card list – who got a card this year <span class="badge pro-only">PRO</span></label>
+      <div id="cardBox" class="card-box" hidden>
+        <div class="row-btns tight"><label class="field inline">Year<select id="cardYear"></select></label><span id="cardStats" class="hint"></span></div>
+        <p class="hint">✉ = you sent them a card · 📬 = they sent you one. Click to mark.</p>
+        <div class="row-btns tight">
+          <button id="tickNotSent" class="ghost small">Tick who has not got one yet</button>
+          <button id="tickLast" class="ghost small">Tick last year’s list</button>
+          <button id="markSent" class="ghost small">✉ Mark ticked as sent</button>
+        </div>
       </div>
       <ul id="contacts" class="contacts"></ul>
       <p id="hint" class="hint"></p>
@@ -92,6 +107,8 @@
     <h2 id="cTitle">Add an address</h2>
     <label class="field">Name<input id="cName" type="text" maxlength="80" placeholder="e.g. Mr and Mrs Robert Miller"></label>
     <label class="field">Address<textarea id="cAddr" maxlength="400" placeholder="Street and number&#10;City, State ZIP&#10;Country (if abroad)" spellcheck="false"></textarea></label>
+    <div class="field">Groups<div id="cGroups" class="gchips"></div>
+      <div class="grp-new"><input id="cGroupName" type="text" maxlength="30" placeholder="New group, e.g. Wedding guests"><button id="cNewGroup" type="button" class="ghost small">＋ Add</button></div></div>
     <div class="row-btns">
       <button id="cSave" class="primary">Save</button>
       <button id="cNext" class="ghost">Save and add another</button>
@@ -106,6 +123,9 @@
       <li><strong>Unlimited addresses</strong> in your address book <span class="muted">(Free: 10)</span></li>
       <li><strong>Import from a CSV file</strong> – bring your list from Excel, Google Contacts or Outlook</li>
       <li><strong>Your own envelope size</strong> in millimetres</li>
+      <li><strong>Decorations</strong> – holly, Christmas trees, snowflakes, stars, hearts, flowers, balloons, elegant border</li>
+      <li><strong>Coloured ink</strong> and the <strong>Elegant</strong> and <strong>Pen</strong> lettering</li>
+      <li><strong>🎄 Card list</strong> – who got a card, who sent you one, last year’s list in one click</li>
     </ul>
     <p class="fb-note">💬 Something not working the way you want? Tell me – <a href="mailto:thequan03072002@gmail.com?subject=AddressPress%20feedback">thequan03072002@gmail.com</a>. I read every message and improve the app.</p>
     <p id="proMsg" class="pro-msg" hidden></p>

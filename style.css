@@ -138,3 +138,19 @@ textarea { min-height: 70px; resize: vertical; }
 #cAddr { min-height: 110px; }
 .fb-note { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 8px 0 0; overflow-wrap: anywhere; }
 .fb-note a { color: var(--accent); }
+.grp-bar { display: flex; gap: 6px; align-items: center; }
+.grp-bar select { flex: 1; padding: 7px 9px; }
+.small { padding: 5px 10px; font-size: 13px; }
+.tight { margin-top: 0 !important; flex-wrap: wrap; align-items: center; }
+.field.inline { flex-direction: row; align-items: center; gap: 6px; }
+.field.inline select { width: auto; padding: 4px 8px; }
+.card-box { background: var(--accent-2); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.gdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 3px; vertical-align: 1px; }
+.contacts .ct { background: transparent; border: 1px solid var(--line); padding: 1px 5px; font-size: 13px; opacity: .35; filter: grayscale(1); }
+.contacts .ct.on { opacity: 1; filter: none; border-color: var(--accent); background: var(--accent-2); }
+.gchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; font-weight: 400; }
+.gchip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 14px; padding: 3px 9px; font-size: 13px; cursor: pointer; }
+.gchip input { width: 14px; height: 14px; }
+.grp-new { display: flex; gap: 6px; margin-top: 6px; }
+.grp-new input { flex: 1; padding: 6px 8px; font-weight: 400; }
+.warn { color: var(--danger); }
